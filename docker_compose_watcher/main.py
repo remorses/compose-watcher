@@ -61,9 +61,13 @@ class Handler(FileSystemEventHandler):
         super().on_any_event(event)
         logger.debug("change")
         src = event.src_path
-        # thread = Thread(target=restart, kwargs=dict(file=self.file, service_name=self.service.name))
-        # thread.start()
-        restart(file=self.file, service_name=self.service.name)
+        thread = Thread(
+            target=restart, kwargs=dict(file=self.file, service_name=self.service.name)
+        )
+        thread.start()
+        thread.join()
+        # TODO use a thread to not stoop the ingestion of events, the thread discards events if a restart is already happening
+        # restart(file=self.file, service_name=self.service.name)
 
         # for parent_path in self.service.volumes:
         #     if path_is_parent(parent_path, src):
@@ -74,11 +78,23 @@ def restart(file, service_name):
     global global_timeout
     try:
         logger.debug(f"restarting {service_name}")
+        # this does not work, remove logs from current `dc up`
+        # sys.argv = [
+        #     "docker-compose",
+        #     "--file",
+        #     file,
+        #     "restart",
+        #     "-t",
+        #     str(global_timeout),
+        #     service_name,
+        # ]
         sys.argv = [
             "docker-compose",
             "--file",
             file,
-            "restart",
+            "up",
+            "--force-recreate",
+            "-d",
             "-t",
             str(global_timeout),
             service_name,

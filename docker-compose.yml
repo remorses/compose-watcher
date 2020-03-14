@@ -1,11 +1,17 @@
-version: '3'
+version: '3.7'
 
 services:
+  dummy:
+    image: alpine
+    command: sleep 200
+    init: true
   x:
     image: alpine
-    command: sh -c 'echo ciaooo && sleep 200'
+    restart: on-failure
+    command: sh -c 'echo starting && sleep 200'
+    init: true
     volumes:
       - ./:/src
 
 
-
+      

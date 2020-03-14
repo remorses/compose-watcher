@@ -18,6 +18,8 @@ pip3 install compose-watcher
 ## Usage
 
 Use the directories you want to track as service volumes
+Also consider using `init: true` in the compose service definition for faster killing of processes.
+To not stop the `docker-compose logs` command, there should be always a running container
 
 ```
 version: '3'
@@ -30,6 +32,7 @@ services:
       - ./node_api/src:/src
 
 ```
+
 Then execute `compose-watcher` to watch changes
 
 ```
