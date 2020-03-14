@@ -5,7 +5,9 @@
 </p>
 
 Cli that restarts you docker compose services when a file inside one of its volumes changes
+
 Useful for faster developement with containers that expose behaviour based on mounted files
+
 To use with compiled languages place the compilation step in the `command` field.
 
 Example usage
@@ -24,8 +26,10 @@ pip3 install compose-watcher
 
 ## Usage
 
-Use the directories you want to track as service volumes
+Use the directories you want to track as service volumes.
+
 Also consider using `init: true` in the compose service definition for faster killing of processes.
+
 To not stop the `docker-compose logs` command, there should be always a running container
 
 ```
