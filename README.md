@@ -1,5 +1,9 @@
 # compose-watcher
 
+<p align="center">
+    <img width='500px' src='https://raw.githubusercontent.com/remorses/compose-watcher/master/.github/compose_watcher_video.gif'>
+</p>
+
 Cli that restarts you docker compose services when a file inside one of its volumes changes
 To use with compiled languages place the compilation step in the `command` field.
 
