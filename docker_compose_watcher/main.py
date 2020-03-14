@@ -17,21 +17,20 @@ from threading import Thread
 global_timeout = 3
 
 
-def main(service_names=[], file=None, timeout=3,):
+def main(service_names=[], file=None, timeout=3):
     global global_timeout
     global_timeout = timeout
     if not file:
         for name in DOCKER_COMPOSE_NAMES:
             if os.path.exists(name):
                 file = name
-    print(f'reading volumes paths from {file}')
+    print(f"reading volumes paths from {file}")
     logger.debug(f"file {file}")
     data = load_file(file)
     compose = yaml.safe_load(data)
     input = get_cli_input(compose, file=file, service_names=service_names)
     logger.debug(f"input {input}")
     watch(input)
-
 
 
 def watch(input: CliInput):
@@ -80,7 +79,15 @@ class Handler(FileSystemEventHandler):
         )
         thread.start()
         thread.join()
-        # TODO use a thread to not stoop the ingestion of events, the thread discards events if a restart is already happening
+        for dep in self.service.dependents:
+            thread = Thread(
+                target=restart,
+                kwargs=dict(file=self.file, service_name=dep, skip_dependencies=True),
+            )
+            thread.start()
+            thread.join()
+
+        # TODO use a thread to not stop the ingestion of events, the thread discards events if a restart is already happening
         # restart(file=self.file, service_name=self.service.name)
 
         # for parent_path in self.service.volumes:
@@ -88,31 +95,23 @@ class Handler(FileSystemEventHandler):
         #         logger.info(f"for {src}, child of volume {parent_path}")
 
 
-def restart(file, service_name):
+def restart(file, service_name, skip_dependencies=False):
     global global_timeout
     try:
         logger.debug(f"restarting {service_name}")
-        # this does not work, remove logs from current `dc up`
-        # sys.argv = [
-        #     "docker-compose",
-        #     "--file",
-        #     file,
-        #     "restart",
-        #     "-t",
-        #     str(global_timeout),
-        #     service_name,
-        # ]
-        sys.argv = [
-            "docker-compose",
-            "--file",
-            file,
-            "up",
-            "--force-recreate",
-            "-d",
-            "-t",
-            str(global_timeout),
-            service_name,
-        ]
+        common = ["docker-compose", "--log-level", "ERROR", "--file", file]
+        if skip_dependencies:
+            sys.argv = [*common, "restart", "-t", str(global_timeout), service_name]
+        else:
+            sys.argv = [
+                *common,
+                "up",
+                "--force-recreate",
+                "-d",
+                "-t",
+                str(global_timeout),
+                service_name,
+            ]
         command = dispatch()
         command()
         logger.debug("finish restarting")
@@ -143,10 +142,10 @@ def get_volumes_paths(service: dict):
     return []
 
 
-def get_cli_input(compose: dict, file: str, service_names) -> CliInput:
+def get_cli_input(compose: dict, file: str, service_names=[]) -> CliInput:
     input = CliInput(services=[], file=file)
-
-    for service_name, service in compose.get("services", {}).items():
+    services = compose.get("services", {}).items()
+    for service_name, service in services:
         if not service:
             continue
         if service_names and service_name not in service_names:
@@ -154,8 +153,23 @@ def get_cli_input(compose: dict, file: str, service_names) -> CliInput:
         volumes = list(get_volumes_paths(service))
         extensions = []
         input.services.append(
-            ServiceToWatch(name=service_name, volumes=volumes, extensions=extensions)
+            ServiceToWatch(
+                name=service_name, volumes=volumes, extensions=extensions, dependents=[]
+            )
         )
         # TODO add extensions from labels
+
+    # add dependents
+    for service_name, service in services:
+        depends_on = service.get("depends_on", [])
+        if not depends_on:
+            continue
+        if isinstance(depends_on, str):
+            depends_on = [depends_on]
+        for dep in depends_on:
+            for x in input.services:
+                if x.name == dep:
+                    x.dependents.append(service_name)
+
     return input
 

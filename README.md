@@ -44,6 +44,5 @@ compose-watcher -f docker-compose.yml --timeout 5
 ```
 
 TODO add extension filter
-TODO add services names as positional arguments
 TODO dont block the event receiving thread when restarting
 

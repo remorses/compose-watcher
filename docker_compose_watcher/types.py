@@ -8,6 +8,7 @@ class ServiceToWatch:
     name: str
     volumes: List[str]
     extensions: List[str]
+    dependents: List[str]
 
 
 @dataclass
