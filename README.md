@@ -5,13 +5,16 @@
 </p>
 
 Cli that restarts you docker compose services when a file inside one of its volumes changes
+Useful for faster developement with containers that expose behaviour based on mounted files
 To use with compiled languages place the compilation step in the `command` field.
 
 Example usage
 
 -   graphql api restart when schema file changes
--   [Mongoke](https://github.com/remorses/mongoke) restarts when config schema changes
+-   graphql api mocks based on schema file ([https://github.com/remorses/graphql-easy-mocks](like this one))
+-   Every container that generates code and exposes a server based on a config file
 -   Nodejs container restarts when the src folder changes, recompiling with tsc
+-   [Mongoke](https://github.com/remorses/mongoke) restarts when config schema changes
 
 ## Install
 
@@ -46,3 +49,6 @@ compose-watcher -f docker-compose.yml --timeout 5
 TODO add extension filter
 TODO dont block the event receiving thread when restarting
 
+## How it works
+
+After running the `compose-watcher` command all the volumes mounted on every service are tracked for change, when a change happens the service where the volume is mounted is restarted toghether with the services in the `depends_on` filed. Then the other services that have the restarted service as a dependency in `depends_on` are restarted too
