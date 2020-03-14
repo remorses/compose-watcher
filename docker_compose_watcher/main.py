@@ -17,19 +17,21 @@ from threading import Thread
 global_timeout = 3
 
 
-def main(file=None, timeout=3):
+def main(service_names=[], file=None, timeout=3,):
     global global_timeout
     global_timeout = timeout
     if not file:
         for name in DOCKER_COMPOSE_NAMES:
             if os.path.exists(name):
                 file = name
+    print(f'reading volumes paths from {file}')
     logger.debug(f"file {file}")
     data = load_file(file)
     compose = yaml.safe_load(data)
-    input = get_cli_input(compose, file=file)
+    input = get_cli_input(compose, file=file, service_names=service_names)
     logger.debug(f"input {input}")
     watch(input)
+
 
 
 def watch(input: CliInput):
@@ -141,11 +143,13 @@ def get_volumes_paths(service: dict):
     return []
 
 
-def get_cli_input(compose: dict, file: str) -> CliInput:
+def get_cli_input(compose: dict, file: str, service_names) -> CliInput:
     input = CliInput(services=[], file=file)
 
     for service_name, service in compose.get("services", {}).items():
         if not service:
+            continue
+        if service_names and service_name not in service_names:
             continue
         volumes = list(get_volumes_paths(service))
         extensions = []

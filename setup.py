@@ -27,5 +27,3 @@ setup(
     packages=['docker_compose_watcher'],
 )
 
-
-
