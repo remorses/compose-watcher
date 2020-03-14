@@ -35,10 +35,15 @@ def main(file=None, timeout=3):
 def watch(input: CliInput):
     observer = Observer()
     for service in input.services:
-        event_handler = Handler(service=service, file=input.file)
         for path in service.volumes:
             print(f"watching `{path}` for service `{service.name}`")
-            observer.schedule(event_handler, path, recursive=True)
+            is_dir = os.path.isdir(path)
+            single_path = None
+            if not is_dir:
+                single_path = os.path.basename(path)
+                path = os.path.dirname(os.path.abspath(path))
+            handler = Handler(service=service, file=input.file, single_path=single_path)
+            observer.schedule(handler, path, recursive=is_dir)
     observer.start()
     try:
         while True:
@@ -52,15 +57,22 @@ class Handler(FileSystemEventHandler):
     service: ServiceToWatch
     file: str
 
-    def __init__(self, service, file):
+    def __init__(self, service, file, single_path=None):
         super().__init__()
         self.service = service
         self.file = file
+        self.single_path = single_path
 
     def on_any_event(self, event: FileSystemEvent):
         super().on_any_event(event)
+        src = os.path.basename(os.path.abspath(event.src_path))
         logger.debug("change")
-        src = event.src_path
+        logger.debug(f"event.src={src}")
+        logger.debug(f"single_path={self.single_path}")
+        if self.single_path and os.path.normpath(src) != os.path.normpath(
+            self.single_path
+        ):
+            return
         thread = Thread(
             target=restart, kwargs=dict(file=self.file, service_name=self.service.name)
         )

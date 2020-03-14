@@ -11,7 +11,8 @@ services:
     command: sh -c 'echo starting && sleep 200'
     init: true
     volumes:
-      - ./:/src
+      # - ./:/src
+      - ./setup.py:/src/setup.py
 
 
 
