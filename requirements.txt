@@ -1,2 +1,6 @@
 coloredlogs
 python-dotenv
+fire
+docker-compose
+watchdog
+PyYAML
