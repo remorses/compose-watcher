@@ -1,0 +1,32 @@
+kind: pipeline
+name: default
+
+# skip bump tag
+trigger:
+  ref:
+    exclude:
+    - refs/tags/*
+
+steps:
+- name: test
+  image: python:3.7-alpine
+  commands:
+  - pip install . > /dev/null
+  - pip install pytest > /dev/null
+  - pytest  --disable-warnings -sv
+# - name: bump
+#   image: xplugins/bump
+#   settings:
+#     github_token: 
+#       from_secret: github_token
+#     versionfile: VERSION
+# - name: pypi_publish
+#   image: plugins/pypi
+#   settings:
+#     username: xmorse
+#     setupfile: setup.py
+#     password:
+#       from_secret: pypi_password
+#     distributions:
+#       - sdist
+#       - bdist_wheel

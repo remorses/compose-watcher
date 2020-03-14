@@ -1,0 +1,47 @@
+name: Python package
+
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Set up Python
+      uses: actions/setup-python@v1
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        pytest
+    - name: Bump version
+      uses: remorses/bump-version@master
+      with:
+        version_file: VERSION
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Publish
+      uses: remorses/pypi@master
+      with:
+        username: ${{ secrets.pypi_username }}
+        password: ${{ secrets.pypi_password }}
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
