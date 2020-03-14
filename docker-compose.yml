@@ -3,7 +3,7 @@ version: '3'
 services:
   x:
     image: alpine
-    command: sleep 200
+    command: sh -c 'echo ciaooo && sleep 200'
     volumes:
       - ./:/src
 

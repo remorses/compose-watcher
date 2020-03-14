@@ -33,5 +33,5 @@ services:
 Then execute `compose-watcher` to watch changes
 
 ```
-compose-watcher -f docker-compose.yml
+compose-watcher -f docker-compose.yml --timeout 5
 ```
