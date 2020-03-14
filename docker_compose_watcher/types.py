@@ -12,4 +12,5 @@ class ServiceToWatch:
 
 @dataclass
 class CliInput:
+    file: str
     services: List[ServiceToWatch]

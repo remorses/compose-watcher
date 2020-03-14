@@ -5,7 +5,7 @@ from docker_compose_watcher.support import path_is_parent
 def test_get_cli_input():
     compose = {
         "services": {
-            "x": {"volumes": ["a=patha", "b=pathb"]},
+            "x": {"volumes": ["a:patha", "b:pathb"]},
             "y": {"volumes": {"a": "patha", "b": "pathb"}},
         }
     }

@@ -11,26 +11,41 @@ from .constants import DOCKER_COMPOSE_NAMES
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, FileSystemEventHandler, FileSystemEvent
 from docker_compose_watcher.types import CliInput, ServiceToWatch
+from compose.cli.main import dispatch
+from threading import Thread
+
+
+def restart(file, service_name):
+    try:
+        logger.debug(f"restarting {service_name}")
+        sys.argv = ["docker-compose", "--file", file, "restart", service_name]
+        command = dispatch()
+        command()
+        logger.debug("finish restarting")
+    except Exception as e:
+        return
+    except SystemExit as e:
+        return
+    except BaseException as e:
+        return
 
 
 class Handler(FileSystemEventHandler):
     service: ServiceToWatch
+    file: str
 
-    def restart(self,):
-        logger.debug('restarting')
-        command = TopLevelCommand(self.project)
-        command.run({"COMMAND": "restart", "SERVICE": self.service.name})
-        pass
-
-    def __init__(self, service, ):
+    def __init__(self, service, file):
         super().__init__()
         self.service = service
+        self.file = file
 
     def on_any_event(self, event: FileSystemEvent):
         super().on_any_event(event)
-        logger.debug('change')
+        logger.debug("change")
         src = event.src_path
-        self.restart()
+        # thread = Thread(target=restart, kwargs=dict(file=self.file, service_name=self.service.name))
+        # thread.start()
+        restart(file=self.file, service_name=self.service.name)
 
         # for parent_path in self.service.volumes:
         #     if path_is_parent(parent_path, src):
@@ -42,7 +57,7 @@ def get_volumes_paths(service: dict):
     if isinstance(f, list):
         for vol in f:
             if isinstance(vol, str):
-                _, _, path = vol.partition("=")
+                path, _, _ = vol.partition(":")
                 if path:
                     yield path
             if isinstance(vol, dict):
@@ -54,8 +69,8 @@ def get_volumes_paths(service: dict):
     return []
 
 
-def get_cli_input(compose: dict, options: dict) -> CliInput:
-    input = CliInput(services=[], )
+def get_cli_input(compose: dict, file: str) -> CliInput:
+    input = CliInput(services=[], file=file)
 
     for service_name, service in compose.get("services", {}).items():
         if not service:
@@ -74,24 +89,20 @@ def main(file=None):
         for name in DOCKER_COMPOSE_NAMES:
             if os.path.exists(name):
                 file = name
-    logger.debug(f'file {file}')
+    logger.debug(f"file {file}")
     data = load_file(file)
     compose = yaml.safe_load(data)
-    input = get_cli_input(compose, {"--file": file})
+    input = get_cli_input(compose, file)
+    logger.debug(f"input {input}")
     watch(input)
 
 
 def watch(input: CliInput):
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
     observer = Observer()
     for service in input.services:
-        event_handler = Handler(service=service,)
+        event_handler = Handler(service=service, file=input.file)
         for path in service.volumes:
+            logger.debug(f"watching {path} for {service.name}")
             observer.schedule(event_handler, path, recursive=True)
     observer.start()
     try:
@@ -100,4 +111,7 @@ def watch(input: CliInput):
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
+
+
+
 
