@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import fire
+from docker_compose_watcher.main import main
+
+
+fire.Fire(main)

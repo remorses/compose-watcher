@@ -102,7 +102,7 @@ def watch(input: CliInput):
     for service in input.services:
         event_handler = Handler(service=service, file=input.file)
         for path in service.volumes:
-            logger.debug(f"watching {path} for {service.name}")
+            print(f"watching `{path}` for service `{service.name}`")
             observer.schedule(event_handler, path, recursive=True)
     observer.start()
     try:

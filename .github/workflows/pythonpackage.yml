@@ -30,7 +30,7 @@ jobs:
     - name: Publish
       uses: remorses/pypi@master
       with:
-        username: ${{ secrets.pypi_username }}
+        username: xmorse
         password: ${{ secrets.pypi_password }}
 
 

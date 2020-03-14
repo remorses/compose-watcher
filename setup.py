@@ -1,6 +1,6 @@
 from setuptools import setup
 
-NAME = 'module'
+NAME = 'compose-watcher'
 setup(
     name=NAME,
     # [bump]
@@ -14,7 +14,7 @@ setup(
     license='Apache Software License 2.0',
 
     url=f'https://github.com/remorses/{NAME}',
-    keywords=['TODO'],
+    keywords=['docker-compose', 'watcher', 'watch'],
     install_requires=[x for x in open('./requirements.txt').read().strip().split('\n') if x.strip()],
     package_data={'': ['*.yaml', '*.json', '*.yml', 'VERSION', 'README.md', 'requirements.txt']},
     classifiers=[
@@ -23,7 +23,10 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    packages=[NAME],
+    scripts=['bin/compose-watcher'],
+    packages=['docker_compose_watcher'],
 )
+
+
 
 
