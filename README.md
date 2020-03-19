@@ -8,8 +8,6 @@ Cli that restarts you docker compose services when a file inside one of its volu
 
 Useful for faster developement with containers that expose behaviour based on mounted files.
 
-To use with compiled languages place the compilation step in the `command` field.
-
 Example usage
 
 -   graphql api restart when schema file changes
@@ -20,8 +18,10 @@ Example usage
 
 ## Install
 
-```
+```sh
 pip3 install compose-watcher
+# then you can watch for changes
+compose-watcher -f docker-compose.yml
 ```
 
 ## Usage
@@ -30,28 +30,27 @@ Use the directories you want to track as service volumes.
 
 Also consider using `init: true` in the compose service definition for faster killing of processes.
 
-To not stop the `docker-compose logs` command, there should be always a running container.
+To not stop the `docker-compose` commands on other terminals there should be always a running container (this is a strange fact about docker-compose).
 
 ```
 version: '3'
 
 services:
   api:
-    build: node_api
+    build: .
     command: sh -c 'tsc --incremental && node index.js'
     volumes:
-      - ./node_api/src:/src
+      - ./src:/src
 
 ```
 
 Then execute `compose-watcher` to watch changes.
 
-```
+```sh
 compose-watcher -f docker-compose.yml --timeout 5
 ```
 
 TODO add extension filter
-TODO dont block the event receiving thread when restarting
 
 ## How it works
 
